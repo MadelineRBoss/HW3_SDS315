@@ -18,7 +18,7 @@ Name: Madeline Boss
 
 EID: mrb5727
 
-To see the code, visit GitHub
+To see the code, visit [GitHub](https://github.com/MadelineRBoss/HW3_SDS315)
 
 ### Probelm 1
 
