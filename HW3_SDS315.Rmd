@@ -1,0 +1,128 @@
+---
+title: "SDS 315 HW3"
+output: html_document
+date: "2024-01-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyverse)
+library(mosaic)
+library(ggplot2)
+library(kableExtra)
+```
+
+## **HW 2**
+Name: Madeline Boss
+
+EID: mrb5727
+
+To see the code, visit GitHub
+
+### Probelm 1
+
+```{r, include = FALSE}
+data1 <- read_csv("creatinine.csv")
+```
+
+#### Part A
+```{r, include = FALSE}
+model_creat <- lm(creatclear ~ age, data = data1)
+coef(model_creat)
+data1A <- data1 %>%
+  mutate(creat_predict = predict(model_creat, newdata = .))
+data1A <- arrange(data1A, age)
+```
+
+To figure out what creatinine clearance rate should be expected for a 55-year old, we must use equation 'creatinine clearance = `r round(coef(model_creat)[1], 2)` + `r round(coef(model_creat)[2], 2)` * age', which was gathered from the lm() function. Using this equation, we can predict creatinine clearance for a 55 year old is `r round(select(filter(data1A, age == 55), creat_predict), 2)` mL/minute.
+
+#### Part B
+
+Creatine clearance rate change by -0.62 mL/minute with every year in age. This was determined by finding the linear model using lm() for the predicted creatine clearance rate equation, and examining the coefficient for age (our independent variable).
+
+#### Part C
+
+```{r 1C, echo = FALSE}
+residual40 <- round(135 - (coef(model_creat)[1] + coef(model_creat)[2]*(40)),2)
+residual60 <- round(112 - (coef(model_creat)[1] + coef(model_creat)[2]*(60)),2)
+```
+
+The 40 year old is healthier for their age. This is because their residual creatine clearance rate (residual = actual - predicted) is `r residual40` mL/minute, compared to the 60 year old whose residual was `r residual60` mL/minute. Since the higher residual represents a healthier creatine clearance, the 40 year old is healthier. 
+
+### Problem 2
+
+```{r 2 setup, include = FALSE}
+data2 <- read_csv("marketmodel.csv")
+```
+
+The beta (or slope) of a stock represents the systemic risk of a stock. The higher the beta is, the more likely it's value is to fall when a market failure happens. To calculate the beta you first find the linear model (lm()) between a stock's returns and S&P 500's returns. Using that model, use coef()[2] to find the slope, which is also the beta.
+
+```{r 2, echo = FALSE}
+#find models
+AAPL_model <- lm(AAPL ~ SPY, data = data2)
+GOOG_model <- lm(GOOG ~ SPY, data = data2)
+MRK_model <- lm(MRK ~ SPY, data = data2)
+JNJ_model <- lm(JNJ ~ SPY, data = data2)
+WMT_model <- lm(WMT ~ SPY, data = data2)
+TGT_model <- lm(WMT ~ SPY, data = data2)
+
+#make columns for kbl
+stocks <- c("AAPL", "GOOG", "MRK", "JNJ", "WMT", "TGT")
+
+intercept <- c(coef(AAPL_model)[1], coef(GOOG_model)[1], coef(MRK_model)[1], coef(JNJ_model)[1], coef(WMT_model)[1], coef(TGT_model)[1])
+
+slope <- c(coef(AAPL_model)[2], coef(GOOG_model)[2], coef(MRK_model)[2], coef(JNJ_model)[2], coef(WMT_model)[2], coef(TGT_model)[2])
+
+R2 <- c(rsquared(AAPL_model), rsquared(GOOG_model), rsquared(MRK_model), rsquared(JNJ_model), rsquared(WMT_model), rsquared(TGT_model))
+
+#round values
+intercept <- round(intercept, 4)
+slope <- round(slope, 4)
+R2 <- round(R2, 4)
+
+#construct tibble
+data2B <- tibble(stocks, intercept, slope, R2)
+kable_classic_2(kbl(data2B))
+```
+
+The graph above shows the components of Capital Asset Pricing Models for six stocks. The slope, or beta, represents the systemic risk of a stock, with higher values being more risky. The R2 (r-squared) represents how accurate the beta is, with higher values being more accurate.
+
+In conclusion, both WMT and TGT have lowest systemic risk, while AAPL has the highest systemic risk
+
+### Probelm 3
+```{r 3 setup, include = FALSE}
+data3 <- read_csv("covid.csv")
+```
+
+```{r 3, echo = FALSE}
+Italy_data <- filter(data3, country == "Italy")
+Spain_data <- filter(data3, country == "Spain")
+
+#find Italy's exponential model
+Italy_em <- lm(log(Italy_data$deaths) ~ Italy_data$days_since_first_death)
+Italy_doubling_time = log(2)/coef(Italy_em)[2]
+
+#find Spain's exponential model
+Spain_em <- lm(log(Spain_data$deaths) ~ Spain_data$days_since_first_death)
+Spain_doubling_time = log(2)/coef(Spain_em)[2]
+```
+
+```{r 3graph, echo=FALSE}
+ggplot(data3) + geom_line(aes(x = days_since_first_death, y = deaths, color = country)) + labs(x = "Days Since First Death", y = "Deaths", title = "COVID Deaths Between Italy and Spain")
+```
+
+The graph above shows the number of COVID deaths in Italy and Spain since their first COVID death. When creating an exponential model for Italy's deaths the growth rate is `r round(coef(Italy_em)[2],3)` and their doubling rate it `r round(Italy_doubling_time)`. For Spain's exponential model of their COVID death's, their growth rate is `r round(coef(Spain_em)[2],3)` and their doubling rate it `r round(Spain_doubling_time)`.
+
+### Problem 4
+```{r 4 setup, include =FALSE}
+data4 <- read_csv("milk.csv")
+```
+
+```{r 4, echo=FALSE}
+milk_pm = lm(log(sales) ~ log(price), data = data4)
+
+milk_price_elastic <- round(coef(milk_pm)[2], 3)
+```
+
+The estimated price elasticity of milk is `r milk_price_elastic`. This value was obtained by finding the linear model of the log of price vs the log of sales. Then using the coef() function, I found the beta value or the price elasticity of milk.
